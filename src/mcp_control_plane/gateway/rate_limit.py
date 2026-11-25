@@ -60,10 +60,19 @@ class InMemorySlidingWindowRateLimiter:
 
 
 class RedisSlidingWindowRateLimiter:
-    """Production sliding-window rate limiter using Redis sorted sets (ZADD/ZREMRANGEBYSCORE)."""
+    """Production sliding-window rate limiter using Redis sorted sets (ZADD/ZREMRANGEBYSCORE)
+    with zero-trust fail-closed protection and seamless in-memory fallback.
+    """
 
-    def __init__(self, redis_client: Any) -> None:
+    def __init__(
+        self,
+        redis_client: Any,
+        fallback_limiter: InMemorySlidingWindowRateLimiter | None = None,
+        fail_closed: bool = False,
+    ) -> None:
         self._redis = redis_client
+        self.fallback_limiter = fallback_limiter or InMemorySlidingWindowRateLimiter()
+        self.fail_closed = fail_closed
 
     async def check_limit(
         self,
@@ -106,5 +115,9 @@ class RedisSlidingWindowRateLimiter:
 
             return False, 0, retry_after_ms
         except Exception:
-            # Fail open or fallback to in-memory on redis connection issues
-            return True, 1, 0
+            # Zero-trust resilience: strictly avoid silent open-floodgates
+            if self.fail_closed:
+                return False, 0, 5000
+            if self.fallback_limiter:
+                return await self.fallback_limiter.check_limit(client_id, tool_name, limit_rpm)
+            return False, 0, 1000

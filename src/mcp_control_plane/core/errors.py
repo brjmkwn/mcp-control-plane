@@ -141,6 +141,7 @@ class GuardrailBlockedError(MCPControlPlaneError):
         details: dict[str, Any] | None = None,
         suggestions: list[str] | None = None,
     ) -> None:
+        self.guardrail_type = guardrail_type
         d = details or {}
         d["guardrail_type"] = guardrail_type
         d["violation"] = reason

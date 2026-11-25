@@ -123,17 +123,20 @@ Real-time microservice observability and anomaly detection backed by Prometheus 
 ============================= test session starts =============================
 platform win32 -- Python 3.13.14, pytest-9.2.0, pluggy-1.7.0
 plugins: anyio-4.16.0, asyncio-1.5.0
-collected 68 items
+collected 74 items
 
-tests/integration/test_streamable_http_mcp.py .....                     [  7%]
-tests/security/test_adversarial_sql_and_writes.py .................... [ 48%]
-tests/security/test_auth_and_origin.py ......                          [ 57%]
-tests/unit/test_confirmation_gate.py ........                          [ 69%]
-tests/unit/test_rate_limit_and_breaker.py ..                           [ 72%]
-tests/unit/test_servers.py ...........                                 [ 91%]
-tests/unit/test_sql_guard.py ......                                    [100%]
+tests/integration/test_streamable_http_mcp.py .....                     [  6%]
+tests/security/test_adversarial_sql_and_writes.py .................... [ 44%]
+tests/security/test_auth_and_origin.py ......                          [ 52%]
+tests/unit/test_confirmation_gate.py ........                          [ 63%]
+tests/unit/test_fail_closed_resilience.py ...                          [ 67%]
+tests/unit/test_rate_limit_and_breaker.py ..                           [ 70%]
+tests/unit/test_servers.py ...........                                 [ 87%]
+tests/unit/test_sql_guard.py ......                                    [ 95%]
+tests/unit/test_sql_guard_cache.py ..                                  [ 98%]
+tests/unit/test_stdio_transport.py .                                   [100%]
 
-============================= 68 passed in 0.49s ==============================
+============================= 74 passed in 0.97s ==============================
 ```
 
 ---
@@ -145,7 +148,7 @@ All unit, security, and benchmark suites run hermetically in-memory without requ
 
 ```bash
 # Clone and setup virtual environment
-git clone https://github.com/brijmakwana/mcp-control-plane.git
+git clone https://github.com/brjmkwn/mcp-control-plane.git
 cd mcp-control-plane
 
 python -m venv .venv
@@ -155,7 +158,7 @@ pip install -e ".[dev]"
 # Run code hygiene linting
 ruff check .
 
-# Execute complete test suite (68 tests)
+# Execute complete test suite (74 tests)
 pytest -v
 
 # Run reproducible 1,000-request load benchmark & adversarial evaluation
@@ -185,7 +188,7 @@ curl http://localhost:8000/metrics | grep mcp_tool_calls_total
 ---
 
 ### 4.3 Mode C: Local Desktop MCP Host (`stdio` Transport)
-To integrate with Claude Desktop, Cursor, or local MCP hosts over standard input/output:
+To integrate with Claude Desktop, Cursor, or local MCP hosts over standard input/output (see template in `config/claude_desktop_config.json`):
 
 ```json
 {

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "mcp-control-plane": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_control_plane.main",
+        "--transport",
+        "stdio"
+      ],
+      "env": {
+        "MCP_CONFIRMATION_SECRET": "a-secure-random-32-character-secret-key-gate",
+        "MCP_TEST_MODE": "true"
+      }
+    }
+  }
+}

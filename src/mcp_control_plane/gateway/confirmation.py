@@ -49,16 +49,20 @@ class InMemoryNonceStore:
 
 
 class RedisNonceStore:
-    """Redis-backed atomic nonce store using SETNX with expiration."""
+    """Redis-backed atomic nonce store using SETNX with expiration and fail-closed security."""
 
     def __init__(self, redis_client: Any) -> None:
         self._redis = redis_client
 
     async def consume_nonce(self, nonce: str, ttl_seconds: int) -> bool:
         key = f"mcp:nonce:{nonce}"
-        # Set if Not Exists with expiry
-        result = await self._redis.set(key, "1", ex=ttl_seconds, nx=True)
-        return bool(result)
+        try:
+            # Set if Not Exists with expiry
+            result = await self._redis.set(key, "1", ex=ttl_seconds, nx=True)
+            return bool(result)
+        except Exception:
+            # Fail closed: reject mutating execution on Redis communication failure
+            return False
 
 
 class ConfirmationGate:

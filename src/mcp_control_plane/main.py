@@ -131,24 +131,23 @@ build_app = create_app
 
 
 async def run_stdio_transport(registry: ToolRegistry) -> None:
-    """Run local stdio JSON-RPC transport for desktop MCP hosts (Claude Desktop/Cursor)."""
+    """Run local stdio JSON-RPC transport for desktop MCP hosts (Claude Desktop/Cursor).
+
+    Uses asyncio.to_thread for stdin reading to guarantee cross-platform compatibility
+    across Windows Proactor, macOS, and Linux runners.
+    """
     logger.info("mcp_gateway_starting_stdio", tools_registered=len(registry.tools))
     local_principal = ClientPrincipal(
         client_id="stdio-local-user",
         scopes=["admin", "read:db", "read:github", "write:github", "read:ops"],
     )
 
-    loop = asyncio.get_running_loop()
-    reader = asyncio.StreamReader()
-    protocol = asyncio.StreamReaderProtocol(reader)
-    await loop.connect_read_pipe(lambda: protocol, sys.stdin)
-
     while True:
-        line_bytes = await reader.readline()
-        if not line_bytes:
+        raw_line = await asyncio.to_thread(sys.stdin.readline)
+        if not raw_line:
             break
 
-        line = line_bytes.decode("utf-8").strip()
+        line = raw_line.strip()
         if not line:
             continue
 
@@ -183,7 +182,7 @@ async def run_stdio_transport(registry: ToolRegistry) -> None:
             sys.stdout.flush()
         except Exception as e:
             err_out = JsonRpcResponse(
-                id=None,
+                id=req_id if "req_id" in locals() and req_id is not None else None,
                 error={"code": -32000, "message": str(e)},
             ).model_dump()
             sys.stdout.write(json.dumps(err_out) + "\n")
